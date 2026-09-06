@@ -153,8 +153,24 @@
   .lrow .lname { flex: 1; font-size: .87rem; font-weight: 600; color: var(--ink-2); line-height: 1.25; }
   .lrow.on .lname { color: var(--ink); }
   .lrow .lname .hi { font-family: var(--dev); display: block; font-weight: 400; font-size: .76rem; color: var(--ink-3); }
-  .lrow .lamt { font-size: .95rem; font-weight: 800; color: var(--money); }
-  .lrow .lamt .each { font-size: .7rem; font-weight: 500; color: var(--ink-3); }
+  .lrow .lamt {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--money);
+    min-width: 4.6rem;
+    text-align: right;
+    flex: 0 0 auto;
+    line-height: 1.15;
+  }
+  .lrow .lamt .each {
+    display: block;
+    font-size: .66rem;
+    font-weight: 500;
+    color: var(--ink-3);
+    letter-spacing: .01em;
+    margin-bottom: .1rem;
+  }
+  .lrow .lamt .each .hi { font-family: var(--dev); }
 
   /* ---------- steps ---------- */
   main { padding: 1rem .9rem 0; display: flex; flex-direction: column; gap: .85rem; }
@@ -407,7 +423,7 @@
     <div class="lrow" id="rowCi">
       <span class="ltick">○</span>
       <span class="lname">4 check-ins on the way<span class="hi">रास्ते में 4 चेक-इन</span></span>
-      <span class="lamt">₹5 <span class="each">each</span></span>
+      <span class="lamt"><span class="each">each · <span class="hi">हर एक</span></span>₹5</span>
     </div>
     <div class="lrow" id="rowGate">
       <span class="ltick">○</span>
