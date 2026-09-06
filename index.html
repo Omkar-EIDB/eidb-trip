@@ -233,8 +233,16 @@
     cursor: pointer;
   }
   .shot input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-  .shot .ico { font-size: 3.1rem; line-height: 1; }
-  .shot .lbl { font-size: .95rem; font-weight: 700; color: var(--ink); margin-top: .45rem; }
+  .shot .inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    width: 100%;
+  }
+  .shot .ico { font-size: 3.6rem; line-height: 1; }
+  .shot .lbl { font-size: .95rem; font-weight: 700; color: var(--ink); }
   .shot .lbl .hi { font-family: var(--dev); display: block; font-weight: 400; color: var(--ink-3); font-size: .82rem; }
   .shot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .shot.filled { border-style: solid; border-color: var(--money); }
@@ -457,33 +465,33 @@
 
       <div class="shots">
         <label class="shot" data-shot>
-          <input type="file" accept="image/*" capture="environment">
+          <input type="file" accept="image/*" capture="environment" title="">
           <span class="tick">✓</span>
-          <span>
+          <span class="inner">
             <span class="ico">🚛</span>
             <span class="lbl">Vehicle<span class="hi">गाड़ी</span></span>
           </span>
         </label>
         <label class="shot" data-shot>
-          <input type="file" accept="image/*" capture="environment">
+          <input type="file" accept="image/*" capture="environment" title="">
           <span class="tick">✓</span>
-          <span>
+          <span class="inner">
             <span class="ico">📦</span>
             <span class="lbl">Loaded coils<span class="hi">लोड माल</span></span>
           </span>
         </label>
         <label class="shot" data-shot>
-          <input type="file" accept="image/*" capture="environment">
+          <input type="file" accept="image/*" capture="environment" title="">
           <span class="tick">✓</span>
-          <span>
+          <span class="inner">
             <span class="ico">🪪</span>
             <span class="lbl">Licence<span class="hi">लाइसेंस</span></span>
           </span>
         </label>
         <label class="shot" data-shot>
-          <input type="file" accept="image/*" capture="environment">
+          <input type="file" accept="image/*" capture="environment" title="">
           <span class="tick">✓</span>
-          <span>
+          <span class="inner">
             <span class="ico">🧾</span>
             <span class="lbl">E-invoice<span class="hi">ई-इनवॉइस</span></span>
           </span>
@@ -522,8 +530,8 @@
       <div class="mark">✓</div>
       <h2>Trip started</h2>
       <p>
-        Keep this page. We will SMS you when it is time to check in.
-        <span class="hi">यह पेज रखें। चेक-इन का मैसेज आएगा।</span>
+        Keep this page open in WhatsApp. Tap each check-in below as you pass it.
+        <span class="hi">यह लिंक WhatsApp में रखें। नीचे हर चेक-इन पर टैप करें।</span>
       </p>
     </div>
 
