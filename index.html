@@ -1,8 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#083E73">
+<meta name="robots" content="noindex">
 <title>EIDB Trip Check-In</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap">
 
+</head>
+<body>
 <style>
   :root {
     color-scheme: light;
@@ -27,6 +36,8 @@
      beats theme-matching here. */
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  img { max-width: 100%; }
 
   body {
     background: var(--bg);
@@ -100,19 +111,23 @@
   .money {
     background: var(--ok-bg);
     border-bottom: 1px solid #BFE3D0;
-    padding: .85rem 1.1rem;
+    padding: .9rem 1.1rem;
     display: flex;
     align-items: center;
-    gap: .8rem;
+    gap: .85rem;
   }
   .money .amt {
-    font-size: 1.6rem;
+    font-size: 1.75rem;
     font-weight: 800;
     color: var(--money);
     line-height: 1;
-    flex-shrink: 0;
+    /* Fixed width so the text beside it does not shuffle sideways as the
+       figure grows from 0 to 20 to 50. */
+    min-width: 3.2rem;
+    flex: 0 0 auto;
   }
-  .money .txt { font-size: .87rem; color: #14603E; line-height: 1.35; }
+  .money .txt { font-size: .88rem; color: #14603E; line-height: 1.4; }
+  .money .txt b { font-weight: 700; }
   .money .txt .hi { font-family: var(--dev); display: block; opacity: .85; margin-top: .1rem; }
 
   /* ---------- earnings ledger ---------- */
@@ -589,7 +604,9 @@
     wt:  P.get('wt')  || '18.4 MT',
     eta: P.get('eta') || '',
     cpn: P.get('cpn') || 'EIDB-4471-D9',
-    to:  P.get('to')  || '919000000000',
+    // The app puts the logistics WhatsApp number in the link. Without it the
+    // send-back button opened a chat with a number that does not exist.
+    to:  P.get('to')  || '',
   };
 
   // Distance split. The app sends total km and, optionally, the two end
@@ -710,7 +727,12 @@
       '',
       'Photos attached separately / फोटो अलग से भेज रहा हूँ',
     ];
-    return 'https://wa.me/' + trip.to + '?text=' + encodeURIComponent(lines.join('\n'));
+    const text = encodeURIComponent(lines.join('\n'));
+    // With no number in the link, open WhatsApp with the message ready and let
+    // the driver choose the chat, rather than failing on a fake number.
+    return trip.to
+      ? 'https://wa.me/' + trip.to + '?text=' + text
+      : 'https://api.whatsapp.com/send?text=' + text;
   }
 
   function show(msg, kind) {
@@ -718,3 +740,5 @@
     statusEl.className = 'status show ' + kind;
   }
 </script>
+</body>
+</html>
