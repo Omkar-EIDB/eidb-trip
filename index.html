@@ -1,0 +1,720 @@
+<title>EIDB Trip Check-In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap">
+
+<style>
+  :root {
+    color-scheme: light;
+    --bg:      #EEF3F9;
+    --card:    #FFFFFF;
+    --ink:     #101A26;
+    --ink-2:   #44546A;
+    --ink-3:   #78889C;
+    --rule:    #D6E0EC;
+    --brand:   #0B5CAB;
+    --brand-d: #083E73;
+    --ok:      #17724A;
+    --ok-bg:   #E4F4EC;
+    --warn:    #A65B00;
+    --warn-bg: #FDF0DC;
+    --money:   #1F7A4D;
+    --sans:    'Noto Sans', system-ui, sans-serif;
+    --dev:     'Noto Sans Devanagari', 'Noto Sans', sans-serif;
+  }
+  /* Single deliberate light theme: this page is read in daylight, on a
+     truck cab dashboard, often on a scratched screen. Maximum contrast
+     beats theme-matching here. */
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .phone {
+    max-width: 27rem;
+    margin: 0 auto;
+    padding: 0 0 3rem;
+  }
+
+  /* ---------- demo ribbon ---------- */
+  .ribbon {
+    background: #2B1A00;
+    color: #FFD79A;
+    font-size: .78rem;
+    padding: .55rem .9rem;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .ribbon b { color: #FFF; }
+
+  /* ---------- header ---------- */
+  header {
+    background: linear-gradient(135deg, var(--brand-d), var(--brand));
+    color: #fff;
+    padding: 1.1rem 1.1rem 1.3rem;
+  }
+  .brandrow { display: flex; align-items: center; gap: .7rem; margin-bottom: .85rem; }
+  .logo {
+    width: 54px; height: 54px; flex: 0 0 54px;
+    background: #fff; border-radius: 50%;
+    display: grid; place-items: center;
+    overflow: hidden;
+    padding: 3px;
+  }
+  .logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  header .co {
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    margin: 0;
+  }
+  header .co2 {
+    font-size: .72rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    opacity: .78;
+    margin: .1rem 0 0;
+  }
+  header h1 { font-size: 1.35rem; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+  header .veh {
+    display: inline-block;
+    margin-top: .7rem;
+    background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.3);
+    border-radius: 8px;
+    padding: .3rem .65rem;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: .06em;
+  }
+  header .route { margin: .6rem 0 0; font-size: .88rem; opacity: .9; }
+
+  /* ---------- money banner ---------- */
+  .money {
+    background: var(--ok-bg);
+    border-bottom: 1px solid #BFE3D0;
+    padding: .85rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+  }
+  .money .amt {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--money);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .money .txt { font-size: .87rem; color: #14603E; line-height: 1.35; }
+  .money .txt .hi { font-family: var(--dev); display: block; opacity: .85; margin-top: .1rem; }
+
+  /* ---------- earnings ledger ---------- */
+  .ledger {
+    background: var(--card);
+    border-bottom: 1px solid var(--rule);
+    padding: .2rem .9rem .5rem;
+  }
+  .lrow {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .55rem .2rem;
+    border-bottom: 1px solid var(--bg);
+  }
+  .lrow:last-child { border-bottom: 0; }
+  .lrow .ltick {
+    width: 22px; height: 22px; flex: 0 0 22px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: .8rem; font-weight: 700;
+    color: var(--ink-3); background: var(--bg);
+  }
+  .lrow.on .ltick { background: var(--money); color: #fff; }
+  .lrow .lname { flex: 1; font-size: .87rem; font-weight: 600; color: var(--ink-2); line-height: 1.25; }
+  .lrow.on .lname { color: var(--ink); }
+  .lrow .lname .hi { font-family: var(--dev); display: block; font-weight: 400; font-size: .76rem; color: var(--ink-3); }
+  .lrow .lamt { font-size: .95rem; font-weight: 800; color: var(--money); }
+  .lrow .lamt .each { font-size: .7rem; font-weight: 500; color: var(--ink-3); }
+
+  /* ---------- steps ---------- */
+  main { padding: 1rem .9rem 0; display: flex; flex-direction: column; gap: .85rem; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 1rem 1rem 1.1rem;
+  }
+  .card.done { border-color: #BFE3D0; background: #FAFFFC; }
+
+  .steptop { display: flex; align-items: center; gap: .6rem; margin-bottom: .2rem; }
+  .num {
+    width: 26px; height: 26px; flex: 0 0 26px;
+    border-radius: 50%;
+    background: var(--brand);
+    color: #fff;
+    font-size: .85rem; font-weight: 700;
+    display: grid; place-items: center;
+  }
+  .card.done .num { background: var(--money); }
+  .steptop h2 { font-size: 1.05rem; font-weight: 700; margin: 0; }
+  .sub { font-size: .84rem; color: var(--ink-3); margin: .15rem 0 .9rem 2.2rem; }
+  .sub .hi { font-family: var(--dev); }
+
+  label.fld { display: block; margin-bottom: .8rem; }
+  label.fld span {
+    display: block;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    margin-bottom: .3rem;
+  }
+  input[type="text"], input[type="tel"] {
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 1.05rem;
+    padding: .75rem .8rem;
+    border: 1.5px solid var(--rule);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--ink);
+  }
+  input:focus-visible { outline: 3px solid rgba(11,92,171,.35); outline-offset: 1px; border-color: var(--brand); }
+
+  /* photo grid */
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+  .shot {
+    position: relative;
+    border: 1.5px dashed var(--rule);
+    border-radius: 12px;
+    background: #F7FAFD;
+    aspect-ratio: 1 / 1;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: .5rem;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .shot input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .shot .ico { font-size: 3.1rem; line-height: 1; }
+  .shot .lbl { font-size: .95rem; font-weight: 700; color: var(--ink); margin-top: .45rem; }
+  .shot .lbl .hi { font-family: var(--dev); display: block; font-weight: 400; color: var(--ink-3); font-size: .82rem; }
+  .shot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .shot.filled { border-style: solid; border-color: var(--money); }
+  .shot .tick {
+    position: absolute; right: .35rem; top: .35rem;
+    background: var(--money); color: #fff;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: none; place-items: center; font-size: .8rem; font-weight: 700;
+  }
+  .shot.filled .tick { display: grid; }
+
+  /* consent */
+  .consent {
+    display: flex;
+    gap: .7rem;
+    align-items: flex-start;
+    background: #F7FAFD;
+    border: 1.5px solid var(--rule);
+    border-radius: 12px;
+    padding: .85rem;
+    cursor: pointer;
+  }
+  .consent.on { border-color: var(--money); background: #F5FCF8; }
+  .consent input { width: 24px; height: 24px; flex: 0 0 24px; margin: .1rem 0 0; accent-color: var(--brand); }
+  .consent .ctext { font-size: .86rem; color: var(--ink-2); line-height: 1.45; }
+  .consent .ctext b { color: var(--ink); }
+  .consent .hi { font-family: var(--dev); display: block; margin-top: .35rem; color: var(--ink-3); }
+
+  .plainly {
+    margin-top: .7rem;
+    font-size: .78rem;
+    color: var(--ink-3);
+    line-height: 1.45;
+  }
+
+  /* buttons */
+  .go {
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: .02em;
+    color: #fff;
+    background: var(--brand);
+    border: 0;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: .3rem;
+    cursor: pointer;
+  }
+  .go[disabled] { background: #A8BBD0; cursor: not-allowed; }
+  .go:focus-visible { outline: 3px solid rgba(11,92,171,.4); outline-offset: 2px; }
+  .go .hi { font-family: var(--dev); font-weight: 500; font-size: .85rem; display: block; opacity: .9; }
+
+  .status {
+    margin-top: .7rem;
+    font-size: .85rem;
+    padding: .6rem .75rem;
+    border-radius: 9px;
+    display: none;
+  }
+  .status.show { display: block; }
+  .status.ok { background: var(--ok-bg); color: #14603E; }
+  .status.err { background: var(--warn-bg); color: var(--warn); }
+
+  /* ---------- confirmed panel ---------- */
+  .done-panel { display: none; padding: 1rem .9rem 0; flex-direction: column; gap: .85rem; }
+  .done-panel.show { display: flex; }
+
+  .big-ok {
+    background: var(--money);
+    color: #fff;
+    border-radius: 14px;
+    padding: 1.3rem 1.1rem;
+    text-align: center;
+  }
+  .big-ok .mark { font-size: 2.2rem; line-height: 1; }
+  .big-ok h2 { margin: .5rem 0 .2rem; font-size: 1.25rem; font-weight: 800; }
+  .big-ok p { margin: 0; font-size: .9rem; opacity: .92; }
+  .big-ok .hi { font-family: var(--dev); display: block; margin-top: .3rem; }
+
+  .queue { display: flex; gap: .6rem; }
+  .qbox {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: .8rem;
+    text-align: center;
+  }
+  .qbox .k { font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+  .qbox .v { font-size: 1.5rem; font-weight: 800; margin-top: .15rem; }
+
+  .checkins { display: flex; flex-direction: column; gap: .5rem; }
+  .ci {
+    display: flex; align-items: center; gap: .7rem;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 11px;
+    padding: .75rem .85rem;
+  }
+  .ci .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--rule); flex: 0 0 11px; }
+  .ci.done .dot { background: var(--money); }
+  .ci.now { border-color: var(--brand); border-width: 1.5px; }
+  .ci .name { font-weight: 600; font-size: .93rem; flex: 1; }
+  .ci .time { font-size: .78rem; color: var(--ink-3); }
+  .ci .km { display: block; font-size: .72rem; color: var(--ink-3); font-weight: 400; }
+  .ci .amt2 { font-size: .82rem; font-weight: 800; color: var(--money); }
+  .ci .pill {
+    font-size: .72rem; font-weight: 700; color: var(--brand);
+    border: 1.5px solid var(--brand); border-radius: 20px;
+    padding: .25rem .6rem;
+  }
+
+  .coupon {
+    background: #FFF9E8;
+    border: 1.5px dashed #E0B65A;
+    border-radius: 12px;
+    padding: .95rem;
+    text-align: center;
+  }
+  .coupon .k { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--warn); font-weight: 700; }
+  .coupon .code {
+    font-size: 1.4rem; font-weight: 800; letter-spacing: .12em;
+    margin: .3rem 0 .2rem; color: var(--ink);
+  }
+  .coupon p { margin: 0; font-size: .8rem; color: var(--ink-2); }
+  .coupon .hi { font-family: var(--dev); display: block; margin-top: .2rem; color: var(--ink-3); }
+
+  .help {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: .85rem 1rem;
+    font-size: .88rem;
+  }
+  .help b { display: block; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin-bottom: .25rem; }
+  .help a { color: var(--brand); font-weight: 700; text-decoration: none; font-size: 1.05rem; }
+
+  footer {
+    text-align: center;
+    font-size: .72rem;
+    color: var(--ink-3);
+    padding: 1.5rem 1rem .5rem;
+    line-height: 1.5;
+  }
+</style>
+
+<div class="phone">
+
+  <div class="ribbon" id="ribbon" style="display:none">
+    <b>Design prototype</b> — nothing here is saved or sent anywhere. Open it on a phone to test the camera and location.
+  </div>
+
+  <header>
+    <div class="brandrow">
+      <!-- The real EIDB mark, embedded as data rather than linked: this page
+           will be served from a different host to the app, and a linked image
+           would break the moment that host changed. -->
+      <span class="logo" id="logo"><img alt="East India Drums &amp; Barrels"
+        src="data:image/png;base64,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"></span>
+      <div>
+        <p class="co">East India Drums &amp; Barrels</p>
+        <p class="co2">Unit 1 · Daman</p>
+      </div>
+    </div>
+    <h1>Trip Check-In</h1>
+    <div class="veh" id="vehBox">GJ 05 BX 4471</div>
+    <p class="route" id="routeLine">AM/NS Hazira → EIDB Unit 1, Daman</p>
+  </header>
+
+  <div class="money">
+    <span class="amt" id="earnNow">₹0</span>
+    <span class="txt">
+      <b>of ₹50</b> earned so far · paid at Daman gate
+      <span class="hi">₹50 में से · दमन गेट पर मिलेंगे</span>
+    </span>
+  </div>
+
+  <div class="ledger" id="ledger">
+    <div class="lrow" id="rowPhotos">
+      <span class="ltick">○</span>
+      <span class="lname">Photos &amp; details<span class="hi">फोटो और जानकारी</span></span>
+      <span class="lamt">₹20</span>
+    </div>
+    <div class="lrow" id="rowCi">
+      <span class="ltick">○</span>
+      <span class="lname">4 check-ins on the way<span class="hi">रास्ते में 4 चेक-इन</span></span>
+      <span class="lamt">₹5 <span class="each">each</span></span>
+    </div>
+    <div class="lrow" id="rowGate">
+      <span class="ltick">○</span>
+      <span class="lname">Reaching Daman gate<span class="hi">दमन गेट पहुँचने पर</span></span>
+      <span class="lamt">₹10</span>
+    </div>
+  </div>
+
+  <main id="form">
+
+    <div class="card" id="c1">
+      <div class="steptop"><span class="num">1</span><h2>Your details</h2></div>
+      <p class="sub">Driver name and mobile <span class="hi">· ड्राइवर का नाम और मोबाइल</span></p>
+
+      <label class="fld">
+        <span>Driver name / ड्राइवर का नाम</span>
+        <input type="text" id="dname" autocomplete="name" placeholder="Ramesh Kumar">
+      </label>
+      <label class="fld" style="margin-bottom:0">
+        <span>Mobile number / मोबाइल नंबर</span>
+        <input type="tel" id="dphone" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="98XXXXXXXX">
+      </label>
+    </div>
+
+    <div class="card" id="c2">
+      <div class="steptop"><span class="num">2</span><h2>Four photos</h2></div>
+      <p class="sub">Tap each box to open the camera <span class="hi">· हर बॉक्स दबाकर फोटो लें</span></p>
+
+      <div class="shots">
+        <label class="shot" data-shot>
+          <input type="file" accept="image/*" capture="environment">
+          <span class="tick">✓</span>
+          <span>
+            <span class="ico">🚛</span>
+            <span class="lbl">Vehicle<span class="hi">गाड़ी</span></span>
+          </span>
+        </label>
+        <label class="shot" data-shot>
+          <input type="file" accept="image/*" capture="environment">
+          <span class="tick">✓</span>
+          <span>
+            <span class="ico">📦</span>
+            <span class="lbl">Loaded coils<span class="hi">लोड माल</span></span>
+          </span>
+        </label>
+        <label class="shot" data-shot>
+          <input type="file" accept="image/*" capture="environment">
+          <span class="tick">✓</span>
+          <span>
+            <span class="ico">🪪</span>
+            <span class="lbl">Licence<span class="hi">लाइसेंस</span></span>
+          </span>
+        </label>
+        <label class="shot" data-shot>
+          <input type="file" accept="image/*" capture="environment">
+          <span class="tick">✓</span>
+          <span>
+            <span class="ico">🧾</span>
+            <span class="lbl">E-invoice<span class="hi">ई-इनवॉइस</span></span>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="card" id="c3">
+      <div class="steptop"><span class="num">3</span><h2>Location permission</h2></div>
+      <p class="sub">Needed to confirm your check-ins <span class="hi">· चेक-इन के लिए ज़रूरी</span></p>
+
+      <label class="consent" id="consentBox">
+        <input type="checkbox" id="consent">
+        <span class="ctext">
+          <b>I agree to share my location with EIDB for this trip only.</b>
+          I understand I will be asked to check in a few times on the way, and that sharing stops when the trip is closed.
+          <span class="hi">मैं इस ट्रिप के लिए अपनी लोकेशन EIDB को देने के लिए सहमत हूँ। ट्रिप पूरी होने पर यह बंद हो जाएगा।</span>
+        </span>
+      </label>
+
+      <p class="plainly">
+        Your location is recorded only when you tap a check-in link — not continuously, and not after the trip is closed.
+      </p>
+    </div>
+
+    <button class="go" id="submit" disabled>
+      START TRIP
+      <span class="hi">ट्रिप शुरू करें</span>
+    </button>
+    <div class="status" id="status"></div>
+    <div style="height:1.5rem"></div>
+  </main>
+
+  <div class="done-panel" id="donePanel">
+    <div class="big-ok">
+      <div class="mark">✓</div>
+      <h2>Trip started</h2>
+      <p>
+        Keep this page. We will SMS you when it is time to check in.
+        <span class="hi">यह पेज रखें। चेक-इन का मैसेज आएगा।</span>
+      </p>
+    </div>
+
+    <div class="queue">
+      <div class="qbox">
+        <div class="k">Queue at Daman</div>
+        <div class="v">3<span style="font-size:.9rem;font-weight:600;color:var(--ink-3)">rd</span></div>
+      </div>
+      <div class="qbox">
+        <div class="k">Unloading bay</div>
+        <div class="v">B2</div>
+      </div>
+    </div>
+
+    <div class="checkins">
+      <div class="ci done">
+        <span class="dot"></span>
+        <span class="name">Loaded — start<span class="km" id="kmStart"></span></span>
+        <span class="time" id="t0">just now</span>
+        <span class="amt2">+₹20</span>
+      </div>
+      <div class="ci now" id="ciRow1">
+        <span class="dot"></span>
+        <span class="name">Check-in 1<span class="km" id="km1"></span></span>
+        <span class="pill">SMS coming</span>
+        <span class="amt2">+₹5</span>
+      </div>
+      <div class="ci" id="ciRow2">
+        <span class="dot"></span>
+        <span class="name">Check-in 2<span class="km" id="km2"></span></span>
+        <span class="time">pending</span>
+        <span class="amt2">+₹5</span>
+      </div>
+      <div class="ci" id="ciRow3">
+        <span class="dot"></span>
+        <span class="name">Check-in 3<span class="km" id="km3"></span></span>
+        <span class="time">pending</span>
+        <span class="amt2">+₹5</span>
+      </div>
+      <div class="ci" id="ciRow4">
+        <span class="dot"></span>
+        <span class="name">Check-in 4<span class="km" id="km4"></span></span>
+        <span class="time">pending</span>
+        <span class="amt2">+₹5</span>
+      </div>
+      <div class="ci">
+        <span class="dot"></span>
+        <span class="name">Daman gate<span class="km" id="kmEnd"></span></span>
+        <span class="time">pending</span>
+        <span class="amt2">+₹10</span>
+      </div>
+    </div>
+
+    <div class="coupon">
+      <div class="k">Coupon · up to ₹50</div>
+      <div class="code" id="couponCode">EIDB-4471-D9</div>
+      <p>
+        Show this at Daman security after unloading.
+        <span class="hi">अनलोडिंग के बाद दमन गेट पर दिखाएँ।</span>
+      </p>
+    </div>
+
+    <a class="go" id="sendBack" href="#" style="display:block;text-align:center;text-decoration:none;background:#17724A">
+      SEND MY DETAILS &amp; PHOTOS
+      <span class="hi">अपनी जानकारी और फोटो भेजें</span>
+    </a>
+    <p style="margin:-.2rem 0 0;font-size:.8rem;color:var(--ink-3);line-height:1.45;text-align:center">
+      Opens WhatsApp. Press send, then attach your four photos in the same chat.
+      <span style="font-family:var(--dev);display:block">WhatsApp खुलेगा। भेजें दबाएँ, फिर चारों फोटो उसी चैट में भेजें।</span>
+    </p>
+
+    <div class="help">
+      <b>Daman gate</b>
+      <a href="tel:+910000000000">+91 00000 00000</a>
+    </div>
+  </div>
+
+  <footer>
+    <span id="tripFoot">EIDB Platform</span>
+  </footer>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  // ---------------------------------------------------------------------
+  // One page, every trip. The app builds a link like
+  //   .../trip?id=..&v=GJ05BX4471&src=AM/NS Hazira&mat=HR coils&wt=18.4 MT&cpn=EIDB-4471-D9
+  // and this reads it. No database needed to greet the driver by vehicle.
+  // ---------------------------------------------------------------------
+  const P = new URLSearchParams(location.search);
+  const trip = {
+    id:  P.get('id')  || 'DEMO',
+    veh: P.get('v')   || 'GJ 05 BX 4471',
+    src: P.get('src') || 'AM/NS Hazira',
+    mat: P.get('mat') || 'HR coils',
+    wt:  P.get('wt')  || '18.4 MT',
+    eta: P.get('eta') || '',
+    cpn: P.get('cpn') || 'EIDB-4471-D9',
+    to:  P.get('to')  || '919000000000',
+  };
+
+  // Distance split. The app sends total km and, optionally, the two end
+  // points — "AM/NS Gandhidham" and "EIDB Bhimpore". Four check-ins are placed
+  // at even fractions of the route, so a 420 km run asks for a check-in every
+  // 84 km rather than at times nobody can predict.
+  const totalKm = parseFloat(P.get('km') || '0');
+  const fromName = P.get('from') || trip.src;
+  const toName = P.get('dest') || 'EIDB Daman';
+
+  function legLabel(i) {
+    if (!totalKm) return '';
+    return Math.round((totalKm / 5) * i) + ' km';
+  }
+
+  $('vehBox').textContent = trip.veh;
+  $('routeLine').textContent =
+    trip.src + ' \u2192 EIDB Unit 1, Daman' + (trip.wt ? ' \u00b7 ' + trip.wt + ' ' + trip.mat : '');
+  $('couponCode').textContent = trip.cpn;
+  $('tripFoot').textContent = 'EIDB Platform \u00b7 trip ' + trip.id;
+  if (!P.has('v')) document.getElementById('ribbon').style.display = 'block';
+
+  $('kmStart').textContent = fromName + (totalKm ? ' · 0 km' : '');
+  for (let i = 1; i <= 4; i++) $('km' + i).textContent = legLabel(i);
+  $('kmEnd').textContent = toName + (totalKm ? ' · ' + Math.round(totalKm) + ' km' : '');
+
+  // Earnings ledger — ticks over as each stage is done.
+  const PAY = { photos: 20, checkin: 5, gate: 10 };
+  function paint(earned) {
+    $('earnNow').textContent = '\u20b9' + earned;
+  }
+  paint(0);
+
+  const shots = [...document.querySelectorAll('[data-shot]')];
+  const submit = $('submit');
+  const statusEl = $('status');
+
+  // --- photo capture: show a thumbnail so the driver knows it registered ---
+  shots.forEach((shot) => {
+    const input = shot.querySelector('input');
+    input.addEventListener('change', () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const img = document.createElement('img');
+      img.alt = '';
+      img.src = URL.createObjectURL(file);
+      shot.querySelector('img')?.remove();
+      shot.appendChild(img);
+      shot.appendChild(shot.querySelector('.tick'));
+      shot.classList.add('filled');
+      check();
+    });
+  });
+
+  const consentBox = $('consentBox');
+  $('consent').addEventListener('change', (e) => {
+    consentBox.classList.toggle('on', e.target.checked);
+    check();
+  });
+  ['dname', 'dphone'].forEach((id) => $(id).addEventListener('input', check));
+
+  function check() {
+    const named = $('dname').value.trim().length > 1;
+    const phoned = $('dphone').value.replace(/\D/g, '').length === 10;
+    const photos = shots.filter((s) => s.classList.contains('filled')).length;
+    $('c1').classList.toggle('done', named && phoned);
+    $('c2').classList.toggle('done', photos === 4);
+    $('c3').classList.toggle('done', $('consent').checked);
+    const ready = named && phoned && photos === 4 && $('consent').checked;
+    $('rowPhotos').classList.toggle('on', ready);
+    $('rowPhotos').querySelector('.ltick').textContent = ready ? '\u2713' : '\u25cb';
+    submit.disabled = !ready;
+  }
+
+  // --- one-shot position at submit; this is the only moment we read GPS ---
+  submit.addEventListener('click', () => {
+    submit.disabled = true;
+    submit.textContent = 'Getting your location…';
+    show('Reading location — allow the permission prompt if it appears.', 'ok');
+
+    if (!navigator.geolocation) return finish('Location is not available on this browser. A real trip would still start; the position would be marked unknown.');
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        capturedPosition = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+        finish(`Position recorded: ${capturedPosition} (±${Math.round(pos.coords.accuracy)}m)`);
+      },
+      (err) => finish(`Location blocked (${err.message}). In the real page the trip still starts and dispatch is told the position is missing.`),
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+  });
+
+  let capturedPosition = '';
+
+  function finish(msg) {
+    show(msg, 'ok');
+    $('form').style.display = 'none';
+    $('donePanel').classList.add('show');
+    $('t0').textContent = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    $('sendBack').href = backLink();
+    paint(PAY.photos);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Until there is a server to post to, the driver sends his answers back on
+  // WhatsApp. Crude, but it works today and it is honest — nothing here
+  // pretends to have been saved.
+  function backLink() {
+    const lines = [
+      'EIDB trip ' + trip.id,
+      'Vehicle: ' + trip.veh,
+      'Driver: ' + $('dname').value.trim(),
+      'Mobile: ' + $('dphone').value.trim(),
+      'Consent: yes',
+      'Position: ' + (capturedPosition || 'not available'),
+      'Time: ' + new Date().toLocaleString('en-IN'),
+      'Coupon: ' + trip.cpn,
+      '',
+      'Photos attached separately / फोटो अलग से भेज रहा हूँ',
+    ];
+    return 'https://wa.me/' + trip.to + '?text=' + encodeURIComponent(lines.join('\n'));
+  }
+
+  function show(msg, kind) {
+    statusEl.textContent = msg;
+    statusEl.className = 'status show ' + kind;
+  }
+</script>
