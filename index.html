@@ -329,6 +329,9 @@
   .qbox .v { font-size: 1.5rem; font-weight: 800; margin-top: .15rem; }
 
   .checkins { display: flex; flex-direction: column; gap: .5rem; }
+  .ci .pill { animation: nudge 1.6s ease-in-out infinite; }
+  @keyframes nudge { 0%,100% { opacity: 1 } 50% { opacity: .55 } }
+  @media (prefers-reduced-motion: reduce) { .ci .pill { animation: none } }
   .ci {
     display: flex; align-items: center; gap: .7rem;
     background: var(--card);
@@ -535,6 +538,13 @@
       </div>
     </div>
 
+    <p style="margin:0 0 .5rem;font-size:.85rem;color:var(--ink-2);line-height:1.45">
+      Tap each check-in as you pass it — your location is read once and
+      WhatsApp opens ready to send.
+      <span style="font-family:var(--dev);display:block;color:var(--ink-3)">रास्ते
+      में हर चेक-इन पर टैप करें — लोकेशन एक बार लिया जाएगा और WhatsApp खुल जाएगा।</span>
+    </p>
+
     <div class="checkins">
       <div class="ci done">
         <span class="dot"></span>
@@ -545,7 +555,7 @@
       <div class="ci now" id="ciRow1">
         <span class="dot"></span>
         <span class="name">Check-in 1<span class="km" id="km1"></span></span>
-        <span class="pill">SMS coming</span>
+        <span class="time">pending</span>
         <span class="amt2">+₹5</span>
       </div>
       <div class="ci" id="ciRow2">
@@ -566,7 +576,7 @@
         <span class="time">pending</span>
         <span class="amt2">+₹5</span>
       </div>
-      <div class="ci">
+      <div class="ci" id="ciGate">
         <span class="dot"></span>
         <span class="name">Daman gate<span class="km" id="kmEnd"></span></span>
         <span class="time">pending</span>
@@ -606,6 +616,10 @@
 <script>
   const $ = (id) => document.getElementById(id);
 
+  // The logistics desk the driver's answers come back to. Kept here rather
+  // than in the link, so the address he sees in WhatsApp stays short.
+  const DEFAULT_DESK = '919833369585';
+
   // ---------------------------------------------------------------------
   // One page, every trip. The app builds a link like
   //   .../trip?id=..&v=GJ05BX4471&src=AM/NS Hazira&mat=HR coils&wt=18.4 MT&cpn=EIDB-4471-D9
@@ -622,7 +636,7 @@
     cpn: P.get('cpn') || 'EIDB-4471-D9',
     // The app puts the logistics WhatsApp number in the link. Without it the
     // send-back button opened a chat with a number that does not exist.
-    to:  P.get('to')  || '',
+    to:  P.get('to')  || DEFAULT_DESK,
   };
 
   // Distance split. The app sends total km and, optionally, the two end
@@ -697,59 +711,213 @@
     submit.disabled = !ready;
   }
 
-  // --- one-shot position at submit; this is the only moment we read GPS ---
-  submit.addEventListener('click', () => {
+  // ------------------------------------------------------------------
+  // Location. Read once per action — never continuously. A coordinate pair
+  // means nothing to the person reading it in Daman, so we ask OpenStreetMap
+  // what place it is and send BOTH: the name, and a link that opens the map.
+  // ------------------------------------------------------------------
+  function readPosition() {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) return resolve(null);
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const fix = {
+            lat: lat.toFixed(5),
+            lng: lng.toFixed(5),
+            acc: Math.round(pos.coords.accuracy),
+            place: '',
+            link: 'https://www.google.com/maps/search/?api=1&query=' +
+                  lat.toFixed(5) + ',' + lng.toFixed(5),
+          };
+          fix.place = await placeName(lat, lng);
+          resolve(fix);
+        },
+        () => resolve(null),
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      );
+    });
+  }
+
+  // Free, no key, no account. If it is slow or blocked we simply send the
+  // coordinates — the map link works either way.
+  async function placeName(lat, lng) {
+    try {
+      const ctl = new AbortController();
+      setTimeout(() => ctl.abort(), 6000);
+      const r = await fetch(
+        'https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=12&lat=' +
+          lat + '&lon=' + lng,
+        { signal: ctl.signal, headers: { 'Accept': 'application/json' } }
+      );
+      if (!r.ok) return '';
+      const j = await r.json();
+      const a = j.address || {};
+      const town = a.city || a.town || a.village || a.suburb ||
+                   a.county || a.state_district || '';
+      const state = a.state || '';
+      return [town, state].filter(Boolean).join(', ');
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function fixText(fix) {
+    if (!fix) return 'not available';
+    return (fix.place ? fix.place + '  ' : '') + fix.link;
+  }
+
+  // ------------------------------------------------------------------
+  // Progress survives a reload. The driver will close this page and open it
+  // again from WhatsApp hours later; he should not lose his ₹20.
+  // ------------------------------------------------------------------
+  const KEY = 'eidb_trip_' + (trip.id || 'x');
+  let state = { started: false, checkins: 0, gate: false, name: '', phone: '' };
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (saved) state = Object.assign(state, saved);
+  } catch (e) {}
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function earned() {
+    return (state.started ? PAY.photos : 0) +
+           Math.min(state.checkins, 4) * PAY.checkin +
+           (state.gate ? PAY.gate : 0);
+  }
+
+  function render() {
+    paint(earned());
+
+    // The top ledger mirrors the same three stages.
+    $('rowPhotos').classList.toggle('on', state.started);
+    $('rowPhotos').querySelector('.ltick').textContent = state.started ? '\u2713' : '\u25cb';
+    $('rowCi').classList.toggle('on', state.checkins >= 4);
+    $('rowCi').querySelector('.ltick').textContent =
+      state.checkins >= 4 ? '\u2713' : (state.checkins ? state.checkins + '/4' : '\u25cb');
+    $('rowGate').classList.toggle('on', state.gate);
+    $('rowGate').querySelector('.ltick').textContent = state.gate ? '\u2713' : '\u25cb';
+
+    if (!state.started) return;
+    $('form').style.display = 'none';
+    $('donePanel').classList.add('show');
+    $('sendBack').href = backLink('Loaded — start', lastFix);
+
+    for (let i = 1; i <= 4; i++) {
+      const row = $('ciRow' + i);
+      const done = state.checkins >= i;
+      const next = state.checkins === i - 1 && !state.gate;
+      row.classList.toggle('done', done);
+      row.classList.toggle('now', next && !done);
+      const slot = row.querySelector('.pill') || row.querySelector('.time');
+      if (slot) {
+        slot.textContent = done ? 'sent ✓' : (next ? 'TAP HERE' : 'pending');
+        slot.className = next && !done ? 'pill' : 'time';
+      }
+      row.style.cursor = next && !done ? 'pointer' : 'default';
+    }
+    const g = $('ciGate');
+    g.classList.toggle('done', state.gate);
+    const gs = g.querySelector('.time') || g.querySelector('.pill');
+    if (gs) {
+      const gnext = state.checkins >= 1 && !state.gate;
+      gs.textContent = state.gate ? 'sent ✓' : (gnext ? 'TAP HERE' : 'pending');
+      gs.className = gnext ? 'pill' : 'time';
+    }
+    g.style.cursor = state.gate ? 'default' : 'pointer';
+  }
+
+  let lastFix = null;
+
+  // --- the driver's four on-the-way check-ins, and the gate ---
+  async function stamp(kind, row) {
+    if (row.dataset.busy) return;
+    row.dataset.busy = '1';
+    const slot = row.querySelector('.pill') || row.querySelector('.time');
+    if (slot) slot.textContent = 'locating…';
+    show('Reading your location · आपका लोकेशन लिया जा रहा है', 'ok');
+
+    const fix = await readPosition();
+    lastFix = fix || lastFix;
+    delete row.dataset.busy;
+
+    if (kind === 'gate') {
+      state.gate = true;
+    } else {
+      state.checkins = Math.min(4, state.checkins + 1);
+    }
+    save();
+    render();
+
+    const label = kind === 'gate' ? 'Gate in — Daman'
+                                  : 'Check-in ' + state.checkins;
+    show('₹' + earned() + ' earned. Press send in WhatsApp. · ₹' +
+         earned() + ' हुए। WhatsApp में भेजें।', 'ok');
+    location.href = backLink(label, fix);
+  }
+
+  ['ciRow1', 'ciRow2', 'ciRow3', 'ciRow4'].forEach((id, idx) => {
+    $(id).addEventListener('click', () => {
+      if (!state.started) return;
+      if (state.checkins !== idx) return;   // in order, one at a time
+      stamp('checkin', $(id));
+    });
+  });
+  $('ciGate').addEventListener('click', () => {
+    if (!state.started || state.gate) return;
+    stamp('gate', $('ciGate'));
+  });
+
+  // --- first submit: details + photos + one position fix ---
+  submit.addEventListener('click', async () => {
     submit.disabled = true;
     submit.textContent = 'Getting your location…';
     show('Reading location — allow the permission prompt if it appears.', 'ok');
 
-    if (!navigator.geolocation) return finish('Location is not available on this browser. A real trip would still start; the position would be marked unknown.');
+    const fix = await readPosition();
+    lastFix = fix;
+    state.started = true;
+    state.name = $('dname').value.trim();
+    state.phone = $('dphone').value.trim();
+    save();
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        capturedPosition = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
-        finish(`Position recorded: ${capturedPosition} (±${Math.round(pos.coords.accuracy)}m)`);
-      },
-      (err) => finish(`Location blocked (${err.message}). In the real page the trip still starts and dispatch is told the position is missing.`),
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-    );
-  });
-
-  let capturedPosition = '';
-
-  function finish(msg) {
-    show(msg, 'ok');
-    $('form').style.display = 'none';
-    $('donePanel').classList.add('show');
     $('t0').textContent = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-    $('sendBack').href = backLink();
-    paint(PAY.photos);
+    render();
+    show(fix
+      ? 'Location recorded' + (fix.place ? ': ' + fix.place : '') +
+        ' (±' + fix.acc + 'm). Now press SEND.'
+      : 'Location not available — the trip still starts. Press SEND.', 'ok');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+  });
 
   // Until there is a server to post to, the driver sends his answers back on
   // WhatsApp. Crude, but it works today and it is honest — nothing here
   // pretends to have been saved.
-  function backLink() {
+  function backLink(stage, fix) {
     const lines = [
       'EIDB trip ' + trip.id,
+      stage,
       'Vehicle: ' + trip.veh,
-      'Driver: ' + $('dname').value.trim(),
-      'Mobile: ' + $('dphone').value.trim(),
-      'Consent: yes',
-      'Position: ' + (capturedPosition || 'not available'),
+      'Driver: ' + (state.name || $('dname').value.trim()),
+      'Mobile: ' + (state.phone || $('dphone').value.trim()),
+      'Place: ' + ((fix && fix.place) || '-'),
+      'Position: ' + fixText(fix),
       'Time: ' + new Date().toLocaleString('en-IN'),
       'Coupon: ' + trip.cpn,
-      '',
-      'Photos attached separately / फोटो अलग से भेज रहा हूँ',
+      'Earned so far: Rs ' + earned() + ' of ' + (PAY.photos + PAY.checkin * 4 + PAY.gate),
     ];
+    if (stage.indexOf('start') !== -1) {
+      lines.push('', 'Photos attached separately / फोटो अलग से भेज रहा हूँ');
+    }
     const text = encodeURIComponent(lines.join('\n'));
-    // With no number in the link, open WhatsApp with the message ready and let
-    // the driver choose the chat, rather than failing on a fake number.
     return trip.to
       ? 'https://wa.me/' + trip.to + '?text=' + text
       : 'https://api.whatsapp.com/send?text=' + text;
   }
+
+  render();
 
   function show(msg, kind) {
     statusEl.textContent = msg;
